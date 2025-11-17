@@ -11,7 +11,7 @@ lapply(packages, library, character.only = TRUE)                            # Lo
 source("./regionFile.R")   # Define project region 
 sf_use_s2(F) #switch off spherical geometry
 
-plan(multisession)                                                          # Choose the method to parallelise by with furrr
+plan(multisession,workers = availableCores()-2)                                                          # Choose the method to parallelise by with furrr
 
 all_files <- rbind(categorise_files("I:/Science/MS-Marine/MA/CNRM_ssp370", recursive = TRUE),      # For projection runs
                    categorise_files("I:/Science/MS-Marine/MA/CNRM_ssp126", recursive = TRUE),      # From multiple SSPs
@@ -62,10 +62,7 @@ scheme_result <- arrange(scheme, group) %>%                                 # Cr
                              slab_layer == "D" & Bathymetry >= d_depth ~ (d_depth - s_depth),
                              slab_layer == "D" & Bathymetry < d_depth ~ (Bathymetry - s_depth)))
 
-look <- filter(scheme_result, slab_layer == "S") 
-
-ggplot(look) +
-  geom_raster(aes(x = x, y = y, fill = Shore))
+look <- filter(scheme_result, slab_layer == "S")
 
 #### extract ####
 
@@ -86,9 +83,8 @@ tictoc::toc() # 42 minutes to extract for all files.
 
 #### check ####
 # NE <- readRDS("./Objects/NE_Months/NE.CNRM.hist.01.1993.rds")
-# 
+# # 
 # ggplot(NE) +
 #   geom_raster(aes(x = x, y = y, fill = Temperature)) +
 #   facet_grid(rows = vars(slab_layer))
-## Temperature is higher in deep than shallow. This is consistent with NM 
   
