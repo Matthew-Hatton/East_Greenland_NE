@@ -8,8 +8,7 @@ rm(list=ls())                                                                   
 packages <- c("tidyverse", "sf", "furrr", "terra", "ncdf4", "data.table", "tictoc") # List packages
 lapply(packages, library, character.only = TRUE)                                # Load packages
 source("./regionFile.R")                                           # Define project region 
-
-#plan(sequential)                                                                # Choose the method to paralelise by with furrr
+                                                             # Choose the method to paralelise by with furrr
 plan(multisession, workers = 3)                                                # Choose the method to paralelise by with furrr
 # The job is memory limited, so only use 2 workers (still halves the time)
 
@@ -138,7 +137,7 @@ rivers <- future_pmap(all_files, function(file, year, forcing, ssp){
   mutate(Date = as.Date(as.numeric(Day)-1, origin = str_glue("{Year}-01-01")))  # Add a date column
 toc() # 45 minutes
 
-saveRDS(rivers, "./Objects/chemistry/NE River input.rds")
+saveRDS(rivers, "./Objects/chemistry/NE River input.rds") # returning 0 for NH4 and NO3?
 
 #### Plot ####
 

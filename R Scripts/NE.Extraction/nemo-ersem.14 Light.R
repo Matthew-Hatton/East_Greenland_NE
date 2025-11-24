@@ -74,5 +74,5 @@ ggplot(data = extract) +
   ylab(expression("Light (Em"^{-2}*"d"^{-1}*" )")) +
   facet_grid(rows = vars(Forcing)) +
   NULL
-
-ggsave("./Figures/NEMO-ERSEM/Light.png", last_plot(), dpi = 500, width = 12, height = 18 , units = "cm", bg = "white")
+# 
+# ggsave("./Figures/NEMO-ERSEM/Light.png", last_plot(), dpi = 500, width = 12, height = 18 , units = "cm", bg = "white")

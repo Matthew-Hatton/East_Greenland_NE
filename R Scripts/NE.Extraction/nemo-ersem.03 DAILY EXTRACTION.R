@@ -77,7 +77,7 @@ all_files %>%
   #skip?
  # filter(str_detect(paste0("NE.",Forcing,".",SSP,".",Month,".",Year,".rds"), paste(skip, collapse = "|"), negate = TRUE)) %>% # Remove files that already have summaries in the cache
   split(., f = list(paste(.$Month, .$Year, .$Forcing, .$SSP))) %>%                                   # Specify the timestep to average files over.
-  #.[1:12] %>%
+  # .[1:12] %>%
   future_map(NEMO_ERSEM, analysis = "slabR", summary = scheme_result,
              scheme = scheme, start = start, count = count,
              out_dir = "./Objects/NE_Days", 

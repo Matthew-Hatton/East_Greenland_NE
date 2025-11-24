@@ -1,3 +1,5 @@
+## -- Doesn't change between NM and NE -- ##
+
 rm(list = ls()) # reset
 
 # #### download global monthly mean globcolour products of interest for the 2010s

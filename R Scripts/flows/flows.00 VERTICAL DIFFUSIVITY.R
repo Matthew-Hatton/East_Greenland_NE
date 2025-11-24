@@ -12,6 +12,10 @@ source("./regionFile.R")
 plan(multisession,workers = availableCores() - 2)
 
 deep_convection_is <- 0.14                                                      # Threshold above which vertical diffusivity = deep convection
+ssp <- "ssp370"
+forcing <- "CNRM"
+start_year <- 2011
+end_year <- 2019
 
 #### Quantify the amount of deep convection ####
 ## For more discussion see the appropriate entry in ./Notes

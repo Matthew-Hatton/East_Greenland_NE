@@ -9,9 +9,9 @@ rm(list=ls())                                                                   
 Packages <- c("tidyverse", "data.table", "furrr" ,"sf")                         # List packages
 lapply(Packages, library, character.only = TRUE)                                # Load packages
 
-plan(multisession)
+plan(multisession,workers = availableCores()-2)
 
-offshore <- readRDS("./Objects/Domains.rds") %>% 
+offshore <- readRDS("./Objects/domain/Domains.rds") %>% 
   filter(Shore == "Offshore")
 
 deep_convection_is <- 0.14                                                      # Threshold above which vertical diffusivity = deep convection
@@ -65,10 +65,10 @@ area <- st_union(samples) %>%                                               # Co
 
 rm(samples)
 
-ggplot(area) +                                                              # Check the polygons match correctly with points
-  geom_sf(aes(fill = area_m2), size = 0.05, colour = "white") +
-  theme_minimal() +
-  NULL
+# ggplot(area) +                                                              # Check the polygons match correctly with points
+#   geom_sf(aes(fill = area_m2), size = 0.05, colour = "white") +
+#   theme_minimal() +
+#   NULL
 
 area <- st_drop_geometry(area)
 

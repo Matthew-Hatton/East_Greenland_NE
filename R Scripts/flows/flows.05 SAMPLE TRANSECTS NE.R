@@ -42,14 +42,14 @@ NE_boundary_summary_V2 <- function (saved, transects, vars = c("NO3", "NH4", "De
 #    future_map(NE_boundary_summary_V2, transects = Transects, 
 #               vars = c("NO3", "NH4", "Detritus", "Diatoms", "Other_phytoplankton"), .progress = T) # Sample NE output along domain boundary
 Summary <- list.files("./Objects/NE_Days/", full.names = T) %>%              # Get the names of all data files
-  future_map(NE_boundary_summary, transects = Transects, 
+  future_map(NE_boundary_summary_V2, transects = Transects, 
              vars = c("NO3", "NH4", "Detritus", "Diatoms", "Other_phytoplankton"), .progress = T) # Sample NE output along domain boundary
 
 #### Save water exchanges between compartments ####
 
 Flows <- map(Summary, `[[`, 1) %>%                                          # Subset the summary results
   data.table::rbindlist() %>% 
-  saveRDS("./Objects/H-Flows.rds")                                          
+  saveRDS("./Objects/physics/H-Flows.rds")                                          
 
 #### Save boundary conditions ####
 
@@ -63,4 +63,4 @@ ggplot(Boundary) + geom_line(aes(x= Date, y = Measured,color = Forcing,linetype 
   labs(y = "Measured at ocean boundary", caption = "Average NEMO-ERSEM outputs along our model perimeter") +
   theme(legend.position = "top")
 
-ggsave("./Figures/Boundary variables.png", last_plot(), dpi = 500, width = 18, height = 10, units = "cm", bg = "white")
+# ggsave("./Figures/Boundary variables.png", last_plot(), dpi = 500, width = 18, height = 10, units = "cm", bg = "white")
