@@ -8,9 +8,9 @@ library(MiMeMo.tools)
 
 source("./regionFile.R")
 
-Physics_template <- read.csv("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/Barents_Sea/2011-2019/Driving/physics_BS_2011-2019.csv") # Read in example Physical drivers
+Physics_template <- read.csv("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/East_Greenland/2011-2019/Driving/physics_GS_2011-2019.csv") # Read in example Physical drivers
 
-#### Last minute data manipulation ####
+#### -- Last minute data manipulation -- ####
 
 My_scale <- readRDS("./Objects/domain/Domains.rds") %>%                            # Calculate the volume of the three zones
   sf::st_drop_geometry() %>% 
@@ -23,22 +23,23 @@ My_scale <- readRDS("./Objects/domain/Domains.rds") %>%                         
   dplyr::select(Shore, slab_layer, Volume)
 
 My_light <- readRDS("./Objects/physics/light.rds") %>% 
-  filter(Forcing == forcing & SSP == paste0("ssp",ssp)) %>%               # Limit to reference period and variable
+  filter(between(Year,start_year,end_year) & Forcing == forcing & SSP %in% c(ssp)) %>%               # Limit to reference period and variable
   group_by(Month,SSP,Forcing) %>%                                                       # Average across months
   summarise(Measured = mean(Light, na.rm = T)) %>% 
   ungroup() %>% 
   arrange(Month)                                                            # Order to match template
 
-## BROKEN - We don't have the data yet, use NM
-# My_AirTemp <- readRDS("./Objects/Air temp and light.rds") %>% 
-#   filter(between(Year, 2011, 2019), grepl("Air", Type)) %>%                 # Limit to reference period and variable
-#   group_by(Month, Shore) %>%                                                # Average across months
-#   summarise(Measured = mean(Measured, na.rm = T)) %>% 
-#   ungroup() %>% 
-#   arrange(Month)                                                            # Order to match template
+# Uses temperature at ice surface
+My_AirTemp <- readRDS("./Objects/physics/CNRM.ssp370.Ice.Summary.rds") %>%
+  filter(between(Year, start_year, end_year) & Model == forcing & Scenario %in% c("hist",ssp)) %>%                 # Limit to reference period and variable
+  subset(select = c(Month,Shore,Air_Temperature)) %>% 
+  group_by(Month, Shore) %>%                                                # Average across months
+  summarise(Measured = mean(Air_Temperature, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(Month)                                                            # Order to match template
 
 My_H_Flows <- readRDS("./Objects/physics/H-Flows.rds") %>% 
-  filter(between(Year, start_year, end_year), Forcing == forcing, SSP == paste0("ssp",ssp)) %>%             # Limit to outputs from a specific run and time
+  filter(between(Year, start_year, end_year) & Forcing == forcing & SSP %in% c("hist",ssp)) %>%             # Limit to outputs from a specific run and time
   group_by(across(-c(Year, Forcing, SSP,Flow))) %>%                                      # Group over everything except year, run, and variable of interest
   summarise(Flow = mean(Flow, na.rm = T)) %>%                               # Average flows by month over years
   ungroup() %>% 
@@ -49,15 +50,15 @@ My_H_Flows <- readRDS("./Objects/physics/H-Flows.rds") %>%
   mutate(Flow = Flow/Volume) %>%                                            # Scale flows by compartment volume
   mutate(Flow = abs(Flow * 86400)) %>%                                      # Multiply for total daily from per second, and correct sign for "out" flows
   arrange(Month)
-  
+
 My_V_Flows <- readRDS("./Objects/physics/vertical diffusivity.rds") %>%
-  filter(between(Year, start_year, end_year) & SSP %in% c("hist",paste0("ssp",ssp)) & Forcing == forcing) %>%                                     # Limit to reference period
+  filter(between(Year, start_year, end_year) & Forcing == forcing & SSP %in% c("hist",ssp)) %>%                                     # Limit to reference period
   group_by(Month) %>% 
   summarise(V_diff = mean(Vertical_diffusivity, na.rm = T)) %>% 
   ungroup() %>% 
   arrange(Month)                                                            # Order by month to match template
 
-My_volumes <- readRDS(paste0("./Objects/physics/",forcing,".",paste0("ssp",ssp),".TS.rds")) %>% 
+My_volumes <- readRDS(paste0("./Objects/physics/",forcing,".",ssp,".TS.rds")) %>% 
   filter(between(Year, start_year, end_year)) %>%                                     # Limit to reference period
   group_by(Compartment, Month) %>%                                          # By compartment and month
   summarise(across(c(Diatoms_avg,Other_phytoplankton_avg,Detritus_avg,Temperature_avg), mean, na.rm = T)) %>%         # Average across years for multiple columns
@@ -71,7 +72,7 @@ My_volumes <- readRDS(paste0("./Objects/physics/",forcing,".",paste0("ssp",ssp),
 #   ungroup() %>%
 #   arrange(Month)                                                            # Order by month to match template
 
-My_Rivers <- readRDS("./Objects/physics/NE River input.rds") %>%
+My_Rivers <- readRDS("./Objects/chemistry/NE River input.rds") %>%
   filter(between(Year, start_year, end_year)) %>%                                     # Limit to reference period
   mutate(Month = month(Date)) %>% 
   group_by(Month) %>%
@@ -80,7 +81,7 @@ My_Rivers <- readRDS("./Objects/physics/NE River input.rds") %>%
   arrange(as.numeric(Month))                                                # Order by month to match template
 
 #### Ice ####
-My_ice <- readRDS(paste0("./Objects/physics/",forcing,".",paste0("ssp",ssp),".Ice.Summary.rds")) %>% 
+My_ice <- readRDS(paste0("./Objects/physics/",forcing,".ssp370.Ice.Summary.rds")) %>% 
   filter(Shore %in% c("Inshore","Offshore")) %>%  # Remove Buffer Zone
   filter(between(Year, start_year, end_year)) %>%  # Filter down to just the target year
   group_by(Month,Shore) %>% 
@@ -129,11 +130,9 @@ Physics_new <- mutate(Physics_template,
                       SI_IceThickness = filter(My_ice, Shore == "Inshore")$Ice_Thickness,
                       SO_SnowThickness = filter(My_ice, Shore == "Offshore")$Snow_Thickness,
                       SI_SnowThickness = filter(My_ice, Shore == "Inshore")$Snow_Thickness,
-                      SO_AirTemp = Physics_template$SO_AirTemp,
-                      SI_AirTemp = Physics_template$SI_AirTemp
-                      # SO_AirTemp = filter(My_AirTemp, Shore == "Offshore")$Measured,
-                      # SI_AirTemp = filter(My_AirTemp, Shore == "Inshore")$Measured
+                      SO_AirTemp = filter(My_AirTemp, Shore == "Offshore")$Measured,
+                      SI_AirTemp = filter(My_AirTemp, Shore == "Inshore")$Measured
                       )
 
-write.csv(Physics_new, file = paste0(paste0("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/Barents_Sea/",start_year,"-",end_year,"-",forcing,"-SSP",ssp,"/Driving/physics_BS_",start_year,"-",end_year,"-",forcing,"-SSP",ssp,".csv")),
+write.csv(Physics_new, file = paste0(paste0("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/East_Greenland/",start_year,"-",end_year,"-",forcing,"-",ssp,"/Driving/physics_EG_",start_year,"-",end_year,"-",forcing,"-ssp370.csv")),
                                      row.names = F)

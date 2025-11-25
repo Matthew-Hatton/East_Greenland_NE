@@ -9,6 +9,12 @@ crs <- 3035                                                              # Speci
 s_depth <- 60
 d_depth <- 400
 
+start_year <- 2060
+end_year <- 2069
+
+forcing <- "CNRM"
+ssp <- "ssp370"
+
 lims <- c(xmin = 2900000, xmax = 4100000, ymin = 5250000, ymax = 6750000)# Specify limits of plotting window, also used to clip data grids
 
 zoom <- coord_sf(xlim = c(lims[["xmin"]], lims[["xmax"]]), ylim = c(lims[["ymin"]], lims[["ymax"]])) # Specify the plotting window for SF maps in this region

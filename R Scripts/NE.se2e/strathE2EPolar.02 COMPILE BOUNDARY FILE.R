@@ -7,13 +7,13 @@ Packages <- c("MiMeMo.tools", "exactextractr", "raster", "lubridate")       # Li
 lapply(Packages, library, character.only = TRUE)   
 source("./regionFile.R")
 
-Boundary_template <- read.csv("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/Barents_Sea/2011-2019/Driving/chemistry_BS_2011-2019.csv")  # Read in example boundary drivers
+Boundary_template <- read.csv("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/East_Greenland/2011-2019/Driving/chemistry_GS_2011-2019.csv")  # Read in example boundary drivers
 
 ## Iterate over different time periods ##
 #### Last minute data manipulation ####
        
 My_boundary_data<- readRDS("./Objects/chemistry/Boundary measurements.rds") %>% # Import data
-  filter(between(Year, start_year, end_year), Forcing == forcing, SSP == paste0("ssp",ssp)) %>%   # Limit to outputs from a specific run and time
+  filter(between(Year, start_year, end_year) & Forcing == forcing & SSP %in% c("hist",ssp)) %>%   # Limit to outputs from a specific run and time
   group_by(Month,Compartment) %>% 
   pivot_wider(names_from = Variable,values_from = Measured) %>% # Average across years
   summarise(across(NO3:Other_phytoplankton, ~ mean(.x, na.rm = T))) %>% 
@@ -22,7 +22,7 @@ My_boundary_data<- readRDS("./Objects/chemistry/Boundary measurements.rds") %>% 
 
 My_atmosphere <- readRDS(stringr::str_glue("./Objects/chemistry/NE.Atmospheric N deposition.rds")) %>%
   filter(between(Year, start_year, end_year)) %>%     
-  filter(SSP == paste0("ssp",ssp) | SSP == "hist") %>% # Limit to reference period
+  filter(between(Year, start_year, end_year) & SSP %in% c("hist",ssp)) %>% # Limit to reference period
   group_by(Month, Oxidation_state, Shore,  Year) %>%
   summarise(Measured = sum(Measured, na.rm = T)) %>%                                         # Sum across deposition states
   summarise(Measured = mean(Measured, na.rm = T)) %>%                                        # Average over years
@@ -31,7 +31,7 @@ My_atmosphere <- readRDS(stringr::str_glue("./Objects/chemistry/NE.Atmospheric N
   arrange(Month)                                                                             # Order months ascending
        
 My_river_N <- readRDS("./Objects/chemistry/NE River input.rds") %>%   
-  filter(between(Year, start_year, end_year), Forcing == forcing, SSP == paste0("ssp",ssp)) %>%                          # Limit to outputs from a specific run and time
+  filter(between(as.numeric(Year), start_year, end_year) & Forcing == forcing & SSP %in% c("hist",ssp)) %>%                       # Limit to outputs from a specific run and time
   mutate(Month = lubridate::month(Date)) %>% 
   group_by(Month) %>%                                                                        # Average across years
   summarise(NO3 = mean(NO3, na.rm = T),
@@ -71,5 +71,5 @@ My_river_N <- readRDS("./Objects/chemistry/NE River input.rds") %>%
                 SO_other_ammonia_flux = 0,
          ) 
        
-write.csv(Boundary_new, file = paste0("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/Barents_Sea/",start_year,"-",end_year,"-",forcing,"-SSP",ssp,"/Driving/chemistry_BS_",start_year,"-",end_year,"-",forcing,"-SSP",ssp,".csv"),
+write.csv(Boundary_new, file = paste0("C:/Users/psb22188/AppData/Local/R/win-library/4.5/StrathE2EPolar/extdata/Models/East_Greenland/",start_year,"-",end_year,"-",forcing,"-",ssp,"/Driving/chemistry_EG_",start_year,"-",end_year,"-",forcing,"-ssp370.csv"),
           row.names = F)
