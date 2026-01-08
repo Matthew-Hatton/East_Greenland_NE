@@ -13,7 +13,7 @@ start_year <- 2060
 end_year <- 2069
 
 forcing <- "CNRM"
-ssp <- "ssp370"
+ssp <- 370
 
 lims <- c(xmin = 2900000, xmax = 4100000, ymin = 5250000, ymax = 6750000)# Specify limits of plotting window, also used to clip data grids
 
