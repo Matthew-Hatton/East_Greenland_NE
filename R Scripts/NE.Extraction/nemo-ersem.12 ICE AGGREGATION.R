@@ -3,7 +3,7 @@ rm(list = ls()) #reset
 #average files based on zone and forcing/ssp data
 packages <- c("tidyverse", "nemoRsem", "furrr", "ncdf4","tictoc")                                 # List packages
 lapply(packages, library, character.only = TRUE)   
-plan(multisession)
+plan(multisession,workers = availableCores()-5)
 
 ssp <- "ssp370"
 Force <- "CNRM"
@@ -38,7 +38,7 @@ summary_data <- all_files %>%
   group_by(Year, Shore, Month, Model, Scenario) %>%
   summarize(across(everything(), mean, na.rm = TRUE))
 
-saveRDS(summary_data,paste0("./Objects/physics/",Force,".",ssp,".Ice.Summary.rds"))
+saveRDS(summary_data,paste0("./Objects/physics/",Force,".",ssp,".Ice.and.Air.Summary.rds"))
 
 ## check
 NE <- readRDS("./Objects/physics/CNRM.ssp370.Ice.Summary.rds")
